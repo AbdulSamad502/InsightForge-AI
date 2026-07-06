@@ -1,0 +1,48 @@
+﻿# Environment
+.env
+backend/.env
+frontend/.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Storage (user data, not code)
+backend/app/storage/uploads/*
+backend/app/storage/reports/*
+backend/app/storage/exports/*
+backend/app/storage/temp/*
+!backend/app/storage/uploads/.gitkeep
+!backend/app/storage/reports/.gitkeep
+!backend/app/storage/exports/.gitkeep
+!backend/app/storage/temp/.gitkeep
+
+# Logs
+backend/logs/*
+!backend/logs/.gitkeep
+
+# Database
+*.db
+*.sqlite
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# IDE
+.vscode/
+.cursor/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
