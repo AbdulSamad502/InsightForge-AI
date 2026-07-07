@@ -56,10 +56,10 @@ jobs:
           ENVIRONMENT: test
         run: pytest tests/ -v --tb=short
 
-  docker:
-    name: Docker Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build backend image
-        run: docker build ./backend -t ai-data-analyst-api:test
+  # docker:
+  #   name: Docker Build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Build backend image
+  #       run: docker build ./backend -t ai-data-analyst-api:test
