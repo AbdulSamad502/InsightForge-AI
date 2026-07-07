@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+
 from app.modules.authentication.models import User
 
 

@@ -1,10 +1,12 @@
 import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.handlers import register_exception_handlers
 from app.core.middleware import RequestIDMiddleware, TimingMiddleware
-from app.api.v1.router import api_router
 
 # ── Logging setup ──────────────────────────────────────────
 logging.basicConfig(

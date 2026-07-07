@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from app.modules.authentication.router import router as auth_router
 
 # Day 1: only auth router

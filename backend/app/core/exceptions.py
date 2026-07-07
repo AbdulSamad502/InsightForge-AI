@@ -28,7 +28,7 @@ class UserAlreadyExistsError(DataAnalystException):
 class DatasetNotFoundError(DataAnalystException):
     def __init__(self, dataset_id: str = ""):
         super().__init__(
-            f"Dataset not found.",
+            "Dataset not found.",
             detail=f"dataset_id={dataset_id}",
             error_code="DATASET_NOT_FOUND"
         )

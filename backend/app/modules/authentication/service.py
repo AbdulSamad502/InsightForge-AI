@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
+
+from app.core.exceptions import AuthenticationError, UserAlreadyExistsError
+from app.core.security import create_access_token, hash_password, verify_password
 from app.modules.authentication import repository
 from app.modules.authentication.models import User
-from app.modules.authentication.schemas import RegisterRequest, LoginRequest
-from app.core.security import hash_password, verify_password, create_access_token
-from app.core.exceptions import AuthenticationError, UserAlreadyExistsError
+from app.modules.authentication.schemas import LoginRequest, RegisterRequest
 
 
 def register_user(db: Session, data: RegisterRequest) -> tuple[User, str]:

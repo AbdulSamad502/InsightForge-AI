@@ -1,14 +1,16 @@
 import logging
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+
 from app.core.exceptions import (
-    DataAnalystException,
     AuthenticationError,
     AuthorizationError,
-    UserAlreadyExistsError,
-    InvalidFileError,
-    FileTooLargeError,
+    DataAnalystException,
     DatasetNotFoundError,
+    FileTooLargeError,
+    InvalidFileError,
+    UserAlreadyExistsError,
 )
 
 logger = logging.getLogger(__name__)
