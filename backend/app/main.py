@@ -2,7 +2,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.ai.observability import setup_langsmith
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.handlers import register_exception_handlers
@@ -48,3 +48,9 @@ def health_check():
 
 
 logger.info(f"AI Data Analyst API started in {settings.environment} mode.")
+
+
+@app.on_event("startup")
+async def startup_event():
+    setup_langsmith()
+    logger.info("AI Data Analyst API is ready.")
