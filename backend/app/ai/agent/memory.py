@@ -17,7 +17,7 @@ def get_memory(session_id: str) -> ConversationBufferWindowMemory:
     """
     if session_id not in _memory_store:
         _memory_store[session_id] = ConversationBufferWindowMemory(
-            k=10,  # remember last 10 turns
+            k=2,  # remember last 10 turns
             memory_key="chat_history",
             return_messages=True,
         )

@@ -1,6 +1,8 @@
+import itertools
 from functools import lru_cache
-
 from pydantic_settings import BaseSettings
+
+
 
 
 class Settings(BaseSettings):
@@ -14,7 +16,8 @@ class Settings(BaseSettings):
 
     # Groq
     groq_api_key: str
-    groq_main_model: str = "llama-3.3-70b-versatile"
+    groq_api_keys: str = ""
+    groq_main_model: str = "llama-3.1-8b-instant"
     groq_fast_model: str = "llama-3.1-8b-instant"
 
     # LangSmith
@@ -48,5 +51,15 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     return Settings()
 
+class KeyRotator:
+    def __init__(self, keys: str):
+        key_list = [k.strip() for k in keys.split(",")]
+        self._cycle = itertools.cycle(key_list)
+    
+    def next(self) -> str:
+        return next(self._cycle)
+
+
 
 settings = get_settings()
+key_rotator = KeyRotator(settings.groq_api_keys)

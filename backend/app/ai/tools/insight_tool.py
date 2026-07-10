@@ -6,8 +6,9 @@ from langchain.tools import BaseTool
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
-from app.core.config import settings
+from app.core.config import settings,key_rotator
 from app.ai.observability import log_llm_usage
+from app.core.key_manager import get_next_key
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class InsightTool(BaseTool):
 
             llm = ChatGroq(
                 model=settings.groq_main_model,
-                api_key=settings.groq_api_key,
+                api_key=get_next_key(),
                 temperature=0.4,
                 max_tokens=300,
             )

@@ -73,13 +73,29 @@ if "current_session_id" not in st.session_state:
         st.stop()
 
 # Load existing messages if session changed
+# if "chat_messages" not in st.session_state:
+#     session_data, status = client.get_session(st.session_state["current_session_id"])
+#     if status == 200:
+#         st.session_state["chat_messages"] = session_data.get("messages", [])
+#     else:
+#         st.session_state["chat_messages"] = []
+session_data, status = client.get_session(
+    st.session_state["current_session_id"]
+)
+
+# if status == 200:
+#     st.session_state["chat_messages"] = session_data.get("messages", [])
+# else:
+#     st.session_state["chat_messages"] = []
 if "chat_messages" not in st.session_state:
-    session_data, status = client.get_session(st.session_state["current_session_id"])
+    session_data, status = client.get_session(
+        st.session_state["current_session_id"]
+    )
+
     if status == 200:
         st.session_state["chat_messages"] = session_data.get("messages", [])
     else:
         st.session_state["chat_messages"] = []
-
 st.divider()
 
 # ════════════════════════════════════════════════════════════
@@ -104,7 +120,7 @@ st.divider()
 
 # Render all existing messages
 for message in st.session_state.get("chat_messages", []):
-    render_message(message)
+    render_message(message, client=client)
 
 # ════════════════════════════════════════════════════════════
 # SECTION 4 — CHAT INPUT
@@ -123,13 +139,17 @@ if prefill and not user_input:
 
 if user_input:
     # Show user message immediately
-    render_message({"role": "user", "content": user_input})
+    # render_message({"role": "user", "content": user_input})
+    # render_message(
+    # {"role": "user", "content": user_input},
+    # client=client
+    # )
 
-    # Add to message history
-    st.session_state["chat_messages"].append({
-        "role": "user",
-        "content": user_input,
-    })
+    # # Add to message history
+    # st.session_state["chat_messages"].append({
+    #     "role": "user",
+    #     "content": user_input,
+    # })
 
     # Call the API
     with st.spinner("🤔 Analyzing your data..."):
@@ -139,10 +159,12 @@ if user_input:
         )
 
     if status == 200:
+
         assistant_message = response_data["message"]
 
         # Render assistant response
-        render_message(assistant_message)
+        # render_message(assistant_message)
+        render_message(assistant_message, client=client)
 
         # Save to session state
         st.session_state["chat_messages"].append(assistant_message)

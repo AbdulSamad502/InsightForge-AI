@@ -1,7 +1,8 @@
 import json
 import logging
-from app.core.config import settings
+from app.core.config import settings,key_rotator
 from app.core.constants import IntentType
+from app.core.key_manager import get_next_key
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +37,9 @@ async def classify_intent(question: str, columns: list[str]) -> IntentType:
 
         llm = ChatGroq(
             model=settings.groq_fast_model,  # llama-3.1-8b-instant — fast and cheap
-            api_key=settings.groq_api_key,
+            api_key=get_next_key(),
             temperature=0,  # deterministic classification
-            max_tokens=20,  # we only need {"intent": "analytics"}
+            max_tokens=10,  # we only need {"intent": "analytics"}
         )
 
         prompt = INTENT_PROMPT.format(

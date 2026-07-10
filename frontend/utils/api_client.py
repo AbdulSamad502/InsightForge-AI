@@ -52,7 +52,7 @@ class APIClient:
             f"{self.base_url}/api/v1/datasets/upload",
             headers=self._headers(),
             files={"file": (filename, file_bytes, "multipart/form-data")},
-            timeout=60,  # uploads can take time
+            timeout=180,  # uploads can take time
         )
         return response.json(), response.status_code
 
@@ -131,6 +131,40 @@ class APIClient:
             f"{self.base_url}/api/v1/chat/sessions/{session_id}/message",
             headers=self._headers(),
             json={"message": message},
-            timeout=60,  # LLM calls can take 10-30 seconds
+            timeout=180,  # LLM calls can take 10-30 seconds
         )
         return response.json(), response.status_code
+    def explain_chart(
+    self,
+    chart_type: str,
+    x_column: str,
+    y_column: str,
+    data_summary: str,
+    title: str,
+    ) -> tuple[dict, int]:
+
+        response = httpx.post(
+            f"{self.base_url}/api/v1/visualization/explain",
+            headers=self._headers(),
+            json={
+                "chart_type": chart_type,
+                "x_column": x_column,
+                "y_column": y_column,
+                "data_summary": data_summary,
+                "title": title,
+            },
+            timeout=60,
+        )
+
+        return response.json(), response.status_code
+
+def explain_chart(self, chart_data: dict) -> tuple[dict, int]:
+    response = httpx.post(
+        f"{self.base_url}/api/v1/visualization/explain",
+        headers=self._headers(),
+        json={
+            "chart_data": chart_data
+        },
+        timeout=60,
+    )
+    return response.json(), response.status_code

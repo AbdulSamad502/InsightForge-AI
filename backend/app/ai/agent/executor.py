@@ -4,7 +4,7 @@ from pathlib import Path
 from langchain_groq import ChatGroq
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from app.core.config import settings
+from app.core.config import settings,key_rotator
 from app.ai.tools.registry import ToolRegistry
 from app.ai.tools.pandas_tool import pandas_tool
 from app.ai.tools.chart_tool import chart_tool
@@ -13,6 +13,7 @@ from app.ai.tools.insight_tool import insight_tool
 from app.ai.agent.memory import get_memory
 from app.ai.agent.tool_chain import build_chained_tools
 from app.core.constants import IntentType
+from app.core.key_manager import get_next_key
 
 logger = logging.getLogger(__name__)
 
@@ -94,13 +95,11 @@ def _build_response_text(pandas_output: str | None, agent_output: str) -> str:
 
 
 def _build_df_schema(df: pd.DataFrame) -> str:
-    """Build a compact schema string injected into the system prompt."""
-    lines = ["Columns and dtypes:"]
+    """Minimal schema — column names and types only."""
+    lines = [f"Shape: {df.shape[0]} rows × {df.shape[1]} cols", "Columns:"]
     for col in df.columns:
-        dtype = str(df[col].dtype)
-        sample = df[col].dropna().iloc[0] if not df[col].dropna().empty else "N/A"
-        lines.append(f"  - {col} ({dtype}), e.g. {sample}")
-    lines.append(f"\nShape: {df.shape[0]} rows × {df.shape[1]} columns")
+        dtype = "num" if pd.api.types.is_numeric_dtype(df[col]) else "text"
+        lines.append(f"  {col} ({dtype})")
     return "\n".join(lines)
 
 
@@ -162,9 +161,9 @@ async def run_agent(
     # Build LLM
     llm = ChatGroq(
         model=settings.groq_main_model,
-        api_key=settings.groq_api_key,
+        api_key=get_next_key(),
         temperature=0.1,
-        max_tokens=2000,
+        max_tokens=500,
     )
 
     # Build agent — wrap tools so pandas output chains into generate_insight

@@ -7,6 +7,7 @@ import pandas as pd
 from pathlib import Path
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
+from app.core.key_manager import get_next_key
 
 from app.core.config import settings
 from app.core.exceptions import InvalidFileError, FileTooLargeError, DatasetNotFoundError
@@ -105,7 +106,7 @@ async def _generate_suggestions(df: pd.DataFrame) -> list[str]:
     try:
         llm = ChatGroq(
             model=settings.groq_fast_model,  # use cheap fast model for this
-            api_key=settings.groq_api_key,
+            api_key=get_next_key(),
             temperature=0.3,
         )
         response = llm.invoke([HumanMessage(content=prompt)])

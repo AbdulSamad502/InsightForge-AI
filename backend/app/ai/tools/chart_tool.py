@@ -1,34 +1,41 @@
 import json
 import logging
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
+from app.modules.visualization.service import generate_chart, decide_chart_type
 
 logger = logging.getLogger(__name__)
 
 
 class ChartToolInput(BaseModel):
     chart_type: str = Field(
-        description="Type of chart: 'bar', 'line', 'pie', 'histogram', 'scatter', 'heatmap'"
+        description=(
+            "Type of chart to generate. Choose the best one for the data:\n"
+            "- 'bar': comparing categories (revenue by category, sales by product)\n"
+            "- 'line': trends over time (monthly revenue, weekly orders)\n"
+            "- 'pie': proportions/percentages (market share, category breakdown)\n"
+            "- 'histogram': distribution of a single column (price distribution)\n"
+            "- 'scatter': relationship between two numeric columns\n"
+            "- 'heatmap': correlation between all numeric columns"
+        )
     )
-    x_column: str = Field(description="Column name for X axis")
-    y_column: str = Field(description="Column name for Y axis (or values for pie)")
-    title: str = Field(description="Chart title", default="")
+    x_column: str = Field(description="Column name for X axis (or labels for pie chart)")
+    y_column: str = Field(description="Column name for Y axis (or values for pie chart). Use empty string for histogram.")
+    title: str = Field(description="Descriptive chart title", default="")
 
 
 class ChartTool(BaseTool):
     """
-    Generates a Plotly chart from the current dataframe.
-    Returns the chart as a JSON string that the frontend renders.
+    Generates professional Plotly charts from the current dataset.
+    Use after pandas_analysis to visualize results.
     """
     name: str = "generate_chart"
     description: str = (
         "Generate a chart to visualize data. "
-        "Use after getting analysis results when a visual would help. "
-        "Specify chart_type (bar/line/pie/histogram/scatter), x_column, y_column, and title. "
-        "Returns Plotly chart JSON."
+        "Available types: bar, line, pie, histogram, scatter, heatmap. "
+        "Use bar for categories, line for time trends, pie for proportions. "
+        "Always use EXACT column names from the dataset schema."
     )
     args_schema: type[BaseModel] = ChartToolInput
 
@@ -37,68 +44,50 @@ class ChartTool(BaseTool):
     def set_dataframe(self, df: pd.DataFrame) -> None:
         self._df = df
 
-    def _run(self, chart_type: str, x_column: str, y_column: str, title: str = "") -> str:
+    def _run(self, chart_type: str, x_column: str, y_column: str = "", title: str = "") -> str:
         if self._df is None:
             return "Error: No dataframe loaded."
 
-        try:
-            df = self._df
+        # Validate columns exist
+        available = list(self._df.columns)
 
-            # Validate columns exist
-            if x_column not in df.columns:
-                return f"Error: Column '{x_column}' not found. Available: {list(df.columns)}"
-            if y_column not in df.columns and chart_type != "histogram":
-                return f"Error: Column '{y_column}' not found. Available: {list(df.columns)}"
-
-            fig = None
-            chart_type = chart_type.lower().strip()
-
-            if chart_type == "bar":
-                # If x is categorical, groupby first
-                if df[x_column].dtype == object:
-                    plot_df = df.groupby(x_column)[y_column].sum().reset_index()
-                else:
-                    plot_df = df[[x_column, y_column]]
-                fig = px.bar(plot_df, x=x_column, y=y_column, title=title or f"{y_column} by {x_column}")
-
-            elif chart_type == "line":
-                plot_df = df.sort_values(x_column)
-                fig = px.line(plot_df, x=x_column, y=y_column, title=title or f"{y_column} over {x_column}")
-
-            elif chart_type == "pie":
-                if df[x_column].dtype == object:
-                    plot_df = df.groupby(x_column)[y_column].sum().reset_index()
-                else:
-                    plot_df = df[[x_column, y_column]]
-                fig = px.pie(plot_df, names=x_column, values=y_column, title=title or f"{y_column} by {x_column}")
-
-            elif chart_type == "histogram":
-                fig = px.histogram(df, x=x_column, title=title or f"Distribution of {x_column}")
-
-            elif chart_type == "scatter":
-                fig = px.scatter(df, x=x_column, y=y_column, title=title or f"{x_column} vs {y_column}")
-
+        if x_column not in available:
+            # Try case-insensitive match
+            lower_map = {c.lower(): c for c in available}
+            if x_column.lower() in lower_map:
+                x_column = lower_map[x_column.lower()]
             else:
-                fig = px.bar(df, x=x_column, y=y_column, title=title)
+                return f"Error: Column '{x_column}' not found. Available columns: {available}"
 
-            if fig is None:
-                return "Error: Could not generate chart."
+        if y_column and y_column not in available:
+            lower_map = {c.lower(): c for c in available}
+            if y_column.lower() in lower_map:
+                y_column = lower_map[y_column.lower()]
+            elif chart_type != "histogram":
+                return f"Error: Column '{y_column}' not found. Available columns: {available}"
 
-            # Apply consistent theme
-            fig.update_layout(
-                template="plotly_white",
-                font=dict(family="Inter, sans-serif"),
-                margin=dict(t=50, l=20, r=20, b=20),
-            )
+        chart_json = generate_chart(
+            df=self._df,
+            chart_type=chart_type,
+            x_col=x_column,
+            y_col=y_column if y_column else None,
+            title=title,
+        )
 
-            return fig.to_json()
+        # Check if generation failed
+        try:
+            parsed = json.loads(chart_json)
+            if "error" in parsed:
+                return f"Chart error: {parsed['error']}"
+        except Exception:
+            pass
 
-        except Exception as e:
-            logger.error(f"Chart generation failed: {e}")
-            return f"Error generating chart: {str(e)}"
+        logger.info(f"Chart generated: type={chart_type} x={x_column} y={y_column}")
+        return chart_json
 
-    async def _arun(self, chart_type: str, x_column: str, y_column: str, title: str = "") -> str:
+    async def _arun(self, chart_type: str, x_column: str, y_column: str = "", title: str = "") -> str:
         return self._run(chart_type, x_column, y_column, title)
 
 
+# Replace the singleton
 chart_tool = ChartTool()

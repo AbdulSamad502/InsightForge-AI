@@ -1,21 +1,29 @@
-You are a business data analyst assistant.
 
-A user has uploaded a dataset with the following columns:
-{columns}
+You are a business data analyst. A user has uploaded a dataset.
 
-Here are a few sample rows to understand the data:
+Dataset columns: {columns}
+
+Sample data (first 3 rows):
 {sample}
 
-Generate exactly 5 specific, useful business questions that this dataset can answer.
+Your task: Generate exactly 5 business questions this dataset can answer.
 
-Rules:
-- Use the ACTUAL column names in the questions
-- Make questions that are genuinely useful for business decisions
-- Vary the question types: trend analysis, ranking, comparison, prediction, anomaly
-- Keep questions concise (under 15 words each)
-- Do NOT include explanations, just the questions
+Requirements for each question:
+1. Use the ACTUAL column names from the dataset
+2. Be specific — mention column names directly in the question
+3. Cover different analysis types across the 5 questions:
+   - Question 1: A revenue/value totals question (aggregation)
+   - Question 2: A ranking question (top N or bottom N)
+   - Question 3: A trend or time-based question (if date column exists, otherwise a comparison)
+   - Question 4: A distribution or statistical question
+   - Question 5: A business insight question (why something happened or what drives a metric)
 
-Return ONLY a valid JSON array of 5 strings. No preamble. No markdown. No explanation.
+Format rules:
+- Each question must end with "?"
+- Keep each question under 15 words
+- Do NOT include numbering or bullet points in the questions themselves
+- Return ONLY a valid JSON array of exactly 5 strings
+- No markdown, no preamble, no explanation
 
-Example format:
+Output format:
 ["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]

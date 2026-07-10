@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 from pathlib import Path
 from sqlalchemy.orm import Session
-
+import hashlib
 from app.modules.chat import repository
 from app.modules.chat.schemas import (
     CreateSessionRequest, SendMessageRequest,
@@ -15,7 +15,7 @@ from app.ai.agent.intent_classifier import classify_intent
 from app.ai.agent.executor import run_agent
 
 logger = logging.getLogger(__name__)
-
+_cache: dict[str, dict] = {}
 
 def _load_dataframe(dataset_id: str, user_id: str, db: Session) -> pd.DataFrame:
     """Load the dataset file into a pandas DataFrame."""
@@ -32,6 +32,34 @@ def _load_dataframe(dataset_id: str, user_id: str, db: Session) -> pd.DataFrame:
     else:
         return pd.read_excel(file_path, engine="openpyxl")
 
+async def _try_simple_answer(question: str, df: pd.DataFrame) -> str | None:
+    """
+    Handle trivially simple questions without calling the LLM at all.
+    Returns answer string or None if the question needs the agent.
+    """
+    q = question.lower().strip()
+    
+    if any(w in q for w in ["how many rows", "row count", "number of rows"]):
+        return f"Your dataset has **{len(df):,} rows**."
+    
+    if any(w in q for w in ["how many columns", "column count", "number of columns"]):
+        return f"Your dataset has **{len(df.columns)} columns**: {', '.join(df.columns)}"
+    
+    if any(w in q for w in ["how many rows and columns", "shape", "size of"]):
+        return f"Your dataset has **{len(df):,} rows** and **{len(df.columns)} columns**."
+    
+    if any(w in q for w in ["what are the columns", "show columns", "list columns"]):
+        return f"Columns: {', '.join(df.columns)}"
+    
+    if any(w in q for w in ["missing values", "null values", "how many nulls"]):
+        nulls = df.isnull().sum()
+        nulls = nulls[nulls > 0]
+        if nulls.empty:
+            return "No missing values found in your dataset."
+        result = "\n".join([f"- **{col}**: {count} missing" for col, count in nulls.items()])
+        return f"Missing values found:\n{result}"
+    
+    return None  # needs the full agent
 
 async def create_session(
     data: CreateSessionRequest, user_id: str, db: Session
@@ -75,20 +103,60 @@ async def send_message(
     )
 
     try:
-        # Load DataFrame
+        
+                # Load DataFrame
         df = _load_dataframe(session.dataset_id, user_id, db)
         columns = list(df.columns)
-
-        # Classify intent (fast model)
-        intent = await classify_intent(data.message, columns)
-
-        # Run the agent (main model)
-        agent_result = await run_agent(
-            question=data.message,
-            df=df,
-            session_id=session_id,
-            intent=intent,
+                # -------- SIMPLE QUESTION CHECK --------
+        simple_answer = await _try_simple_answer(
+            data.message,
+            df
         )
+
+        if simple_answer:
+            assistant_msg = repository.save_message(
+                db=db,
+                session_id=session_id,
+                role="assistant",
+                content=simple_answer,
+            )
+
+            return AgentResponse(
+                message=ChatMessageResponse.model_validate(assistant_msg),
+                session_id=session_id,
+            )
+
+        # ---------------- CACHE CHECK ----------------
+        cache_key = get_cache_key(
+            data.message,
+            session.dataset_id
+        )
+
+
+        if cache_key in _cache:
+            logger.info("Returning cached response")
+            agent_result = _cache[cache_key]
+
+        else:
+            # Classify intent only when cache misses
+            intent = await classify_intent(
+                data.message,
+                columns
+            )
+
+            # Run agent
+            agent_result = await run_agent(
+                question=data.message,
+                df=df,
+                session_id=session_id,
+                intent=intent,
+            )
+
+            # Store response
+            _cache[cache_key] = agent_result
+
+        
+        
 
         # Parse chart_data — store as dict if valid JSON
         chart_data_dict = None
@@ -154,3 +222,8 @@ def get_session_with_messages(
     response = ChatSessionResponse.model_validate(session)
     response.messages = [ChatMessageResponse.model_validate(m) for m in messages]
     return response
+
+def get_cache_key(question: str, dataset_id: str) -> str:
+    return hashlib.md5(f"{question}{dataset_id}".encode()).hexdigest()
+
+
