@@ -8,6 +8,7 @@ from app.modules.authentication.models import User        # already there
 from app.modules.datasets.models import Dataset, DatasetProfile  # ADD THIS
 from app.modules.chat.models import ChatSession, ChatMessage  # ADD THIS
 from app.modules.ml.models import MLResult 
+from app.modules.reports.models import Report
 
 # Import ALL models here so Alembic can detect them
 from app.modules.authentication.models import User   # noqa: F401

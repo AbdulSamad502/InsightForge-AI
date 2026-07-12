@@ -205,4 +205,50 @@ class APIClient:
             timeout=10,
         )
         return response.json(), response.status_code
+    # ── Report methods ─────────────────────────────────────
+
+    def generate_report(self, dataset_id: str) -> tuple[dict, int]:
+        response = httpx.post(
+            f"{self.base_url}/api/v1/reports/generate",
+            headers=self._headers(),
+            json={"dataset_id": dataset_id},
+            timeout=15,
+        )
+        return response.json(), response.status_code
+
+    def list_reports(self) -> tuple[list, int]:
+        response = httpx.get(
+            f"{self.base_url}/api/v1/reports/",
+            headers=self._headers(),
+            timeout=10,
+        )
+        return response.json(), response.status_code
+
+    def get_report_status(self, report_id: str) -> tuple[dict, int]:
+        response = httpx.get(
+            f"{self.base_url}/api/v1/reports/{report_id}/status",
+            headers=self._headers(),
+            timeout=10,
+        )
+        return response.json(), response.status_code
+
+    def download_report(self, report_id: str) -> bytes | None:
+        response = httpx.get(
+            f"{self.base_url}/api/v1/reports/{report_id}/download",
+            headers=self._headers(),
+            timeout=30,
+        )
+        if response.status_code == 200:
+            return response.content
+        return None
+
+    # ── Dashboard methods ──────────────────────────────────
+
+    def get_dashboard_summary(self) -> tuple[dict, int]:
+        response = httpx.get(
+            f"{self.base_url}/api/v1/dashboard/summary",
+            headers=self._headers(),
+            timeout=15,
+        )
+        return response.json(), response.status_code
 
