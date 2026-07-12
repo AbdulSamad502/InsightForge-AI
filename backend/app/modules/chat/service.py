@@ -146,10 +146,11 @@ async def send_message(
 
             # Run agent
             agent_result = await run_agent(
-                question=data.message,
-                df=df,
-                session_id=session_id,
-                intent=intent,
+            question=data.message,
+            df=df,
+            session_id=session_id,
+            intent=intent,
+            dataset_id=session.dataset_id or "",
             )
 
             # Store response

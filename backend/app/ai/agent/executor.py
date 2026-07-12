@@ -121,7 +121,8 @@ async def run_agent(
     df: pd.DataFrame,
     session_id: str,
     intent: IntentType = IntentType.GENERAL,
-) -> dict:
+    dataset_id: str = "",
+)-> dict:
     """
     Main entry point for the AI agent.
     
@@ -140,6 +141,10 @@ async def run_agent(
     df = _normalize_categorical_columns(df)
     pandas_tool.set_dataframe(df)
     chart_tool.set_dataframe(df)
+    ml_tool.set_context(
+    token="",
+    dataset_id=dataset_id
+    )
 
     # Build schema string for system prompt
     df_schema = _build_df_schema(df)

@@ -12,7 +12,7 @@
 # api_router.include_router(auth_router)
 
 from fastapi import APIRouter
-
+from app.modules.ml.router import router as ml_router
 from app.modules.authentication.router import router as auth_router
 from app.modules.datasets.router import router as datasets_router
 from app.modules.chat.router import router as chat_router
@@ -24,3 +24,4 @@ api_router.include_router(auth_router)
 api_router.include_router(datasets_router)
 api_router.include_router(chat_router) 
 api_router.include_router(viz_router) 
+api_router.include_router(ml_router) 

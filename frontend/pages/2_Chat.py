@@ -121,6 +121,166 @@ st.divider()
 # Render all existing messages
 for message in st.session_state.get("chat_messages", []):
     render_message(message, client=client)
+# ════════════════════════════════════════════════════════════
+# SECTION 3.5 — ML MODELS PANEL
+# ════════════════════════════════════════════════════════════
+
+with st.expander("🤖 Run ML Models", expanded=False):
+    st.markdown("Train and run machine learning models on your dataset.")
+
+    dataset_id = st.session_state.get("current_dataset_id", "")
+
+    if not dataset_id:
+        st.warning("Upload and select a dataset first.")
+    else:
+        ml_col1, ml_col2, ml_col3 = st.columns(3)
+
+        with ml_col1:
+            st.markdown("**📈 Forecast**")
+            forecast_col = st.text_input(
+                "Target column",
+                placeholder="e.g. revenue",
+                key="forecast_col",
+            )
+            n_periods = st.slider("Periods to forecast", 1, 12, 3, key="n_periods")
+            if st.button("Run Forecast", use_container_width=True, key="btn_forecast"):
+                if forecast_col:
+                    with st.spinner("Starting forecast model..."):
+                        task_data, status = client.run_forecast(
+                            dataset_id, forecast_col, n_periods
+                        )
+                    if status == 202:
+                        st.session_state["active_ml_task"] = task_data["task_id"]
+                        st.session_state["active_ml_type"] = "forecast"
+                        st.rerun()
+                    else:
+                        st.error(task_data.get("message", "Failed to start forecast."))
+                else:
+                    st.warning("Enter a column name first.")
+
+        with ml_col2:
+            st.markdown("**🔍 Anomaly Detection**")
+            anomaly_col = st.text_input(
+                "Target column",
+                placeholder="e.g. revenue",
+                key="anomaly_col",
+            )
+            if st.button("Detect Anomalies", use_container_width=True, key="btn_anomaly"):
+                if anomaly_col:
+                    with st.spinner("Starting anomaly detection..."):
+                        task_data, status = client.run_anomaly(dataset_id, anomaly_col)
+                    if status == 202:
+                        st.session_state["active_ml_task"] = task_data["task_id"]
+                        st.session_state["active_ml_type"] = "anomaly"
+                        st.rerun()
+                    else:
+                        st.error(task_data.get("message", "Failed to start anomaly detection."))
+                else:
+                    st.warning("Enter a column name first.")
+
+        with ml_col3:
+            st.markdown("**⚠️ Churn Prediction**")
+            churn_col = st.text_input(
+                "Churn column",
+                placeholder="e.g. churned",
+                key="churn_col",
+            )
+            if st.button("Predict Churn", use_container_width=True, key="btn_churn"):
+                if churn_col:
+                    with st.spinner("Starting churn model..."):
+                        task_data, status = client.run_churn(dataset_id, churn_col)
+                    if status == 202:
+                        st.session_state["active_ml_task"] = task_data["task_id"]
+                        st.session_state["active_ml_type"] = "churn"
+                        st.rerun()
+                    else:
+                        st.error(task_data.get("message", "Failed to start churn model."))
+                else:
+                    st.warning("Enter a column name first.")
+
+# ── ML result polling ──────────────────────────────────────
+if "active_ml_task" in st.session_state:
+    task_id = st.session_state["active_ml_task"]
+    ml_type = st.session_state.get("active_ml_type", "ML")
+
+    # Poll placeholder
+    poll_placeholder = st.empty()
+
+    with poll_placeholder.container():
+        with st.spinner(f"⏳ Running {ml_type} model... (this takes 10-30 seconds)"):
+            import time
+            max_polls = 30
+            for _ in range(max_polls):
+                result_data, result_status = client.get_ml_result(task_id)
+                status = result_data.get("status", "pending")
+
+                if status == "complete":
+                    poll_placeholder.empty()
+
+                    # Show result
+                    st.success(f"✅ {ml_type.title()} model complete!")
+
+                    data = result_data.get("result_data", {})
+                    chart_data = result_data.get("chart_data")
+
+                    # Render chart
+                    if chart_data:
+                        from components.chart_renderer import render_chart
+                        render_chart(chart_data)
+
+                    # Show summary
+                    if ml_type == "forecast":
+                        dates = data.get("dates", [])
+                        preds = data.get("predictions", [])
+                        lower = data.get("lower_ci", [])
+                        upper = data.get("upper_ci", [])
+                        mae = data.get("mae", 0)
+                        r2 = data.get("r2_score", 0)
+
+                        st.markdown(f"**Model accuracy:** MAE = {mae:,.0f} | R² = {r2:.3f}")
+                        for d, p, l, u in zip(dates, preds, lower, upper):
+                            st.markdown(
+                                f"📅 **{d}**: `{p:,.0f}` "
+                                f"*(confidence range: {l:,.0f} – {u:,.0f})*"
+                            )
+
+                    elif ml_type == "anomaly":
+                        count = data.get("anomaly_count", 0)
+                        total = data.get("total_count", 0)
+                        pct = data.get("anomaly_pct", 0)
+                        st.markdown(
+                            f"**Found {count} anomalies** out of {total} data points "
+                            f"({pct}% of data)"
+                        )
+
+                    elif ml_type == "churn":
+                        accuracy = data.get("accuracy", 0)
+                        fi = data.get("feature_importance", [])
+                        at_risk = data.get("top_at_risk_customers", [])
+                        high_risk = len([c for c in at_risk if c.get("risk_level") == "High"])
+                        st.markdown(f"**Model accuracy: {accuracy:.1%}**")
+                        st.markdown(f"**{high_risk} customers at HIGH churn risk**")
+                        if fi:
+                            st.markdown("**Top factors driving churn:**")
+                            for f in fi[:3]:
+                                st.markdown(f"- {f['feature']}: {f['importance']:.1%} importance")
+
+                    # Clear the task
+                    del st.session_state["active_ml_task"]
+                    break
+
+                elif status == "failed":
+                    poll_placeholder.empty()
+                    error = result_data.get("error_message", "Unknown error")
+                    st.error(f"ML task failed: {error}")
+                    del st.session_state["active_ml_task"]
+                    break
+
+                time.sleep(2)
+            else:
+                poll_placeholder.empty()
+                st.warning("ML task is taking longer than expected. Check back in a moment.")
+                del st.session_state["active_ml_task"]
 
 # ════════════════════════════════════════════════════════════
 # SECTION 4 — CHAT INPUT

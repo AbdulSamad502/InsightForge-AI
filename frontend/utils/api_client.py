@@ -158,13 +158,51 @@ class APIClient:
 
         return response.json(), response.status_code
 
-def explain_chart(self, chart_data: dict) -> tuple[dict, int]:
-    response = httpx.post(
-        f"{self.base_url}/api/v1/visualization/explain",
-        headers=self._headers(),
-        json={
-            "chart_data": chart_data
-        },
-        timeout=60,
-    )
-    return response.json(), response.status_code
+    def explain_chart(self, chart_data: dict) -> tuple[dict, int]:
+        response = httpx.post(
+            f"{self.base_url}/api/v1/visualization/explain",
+            headers=self._headers(),
+            json={
+                "chart_data": chart_data
+            },
+            timeout=60,
+        )
+        return response.json(), response.status_code
+
+    # ── ML methods ─────────────────────────────────────────
+
+    def run_forecast(self, dataset_id: str, target_column: str, n_periods: int = 3) -> tuple[dict, int]:
+        response = httpx.post(
+            f"{self.base_url}/api/v1/ml/forecast",
+            headers=self._headers(),
+            json={"dataset_id": dataset_id, "target_column": target_column, "n_periods": n_periods},
+            timeout=15,
+        )
+        return response.json(), response.status_code
+
+    def run_anomaly(self, dataset_id: str, target_column: str) -> tuple[dict, int]:
+        response = httpx.post(
+            f"{self.base_url}/api/v1/ml/anomaly",
+            headers=self._headers(),
+            json={"dataset_id": dataset_id, "target_column": target_column},
+            timeout=15,
+        )
+        return response.json(), response.status_code
+
+    def run_churn(self, dataset_id: str, target_column: str) -> tuple[dict, int]:
+        response = httpx.post(
+            f"{self.base_url}/api/v1/ml/churn",
+            headers=self._headers(),
+            json={"dataset_id": dataset_id, "target_column": target_column},
+            timeout=15,
+        )
+        return response.json(), response.status_code
+
+    def get_ml_result(self, task_id: str) -> tuple[dict, int]:
+        response = httpx.get(
+            f"{self.base_url}/api/v1/ml/results/{task_id}",
+            headers=self._headers(),
+            timeout=10,
+        )
+        return response.json(), response.status_code
+
