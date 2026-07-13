@@ -1,0 +1,53 @@
+# render.yaml — place in project root
+# Render reads this file to configure your services automatically
+
+services:
+  - type: web
+    name: ai-data-analyst-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: >
+      alembic upgrade head &&
+      uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-analyst-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: GROQ_API_KEY
+        sync: false  # set manually in Render dashboard
+      - key: GROQ_MAIN_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GROQ_FAST_MODEL
+        value: llama-3.1-8b-instant
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+      - key: LANGCHAIN_API_KEY
+        sync: false  # set manually
+      - key: LANGCHAIN_PROJECT
+        value: ai-data-analyst-prod
+      - key: MAX_UPLOAD_SIZE_MB
+        value: "50"
+      - key: ALLOWED_EXTENSIONS
+        value: csv,xlsx
+      - key: STORAGE_PATH
+        value: ./app/storage
+      - key: GROQ_API_KEYS
+        sync: false  # set manually
+
+databases:
+  - name: ai-analyst-db
+    plan: free
+    databaseName: ai_data_analyst
+    user: ai_analyst_user
