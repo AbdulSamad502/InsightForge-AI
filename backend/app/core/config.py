@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # LangSmith
     langchain_tracing_v2: bool = True
     langchain_api_key: str = ""
-    langchain_project: str = "ai-data-analyst"
+    langchain_project: str = "insightforge-ai"
 
     # Upload
     max_upload_size_mb: int = 50

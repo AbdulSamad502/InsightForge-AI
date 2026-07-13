@@ -1,0 +1,6 @@
+product,category,revenue,quantity,order_date
+Laptop,Electronics,45000.0,2,2024-01-15
+Phone,electronics,25000.0,5,2024-01-16
+Chair,Furniture,,3,not-a-date
+Desk,Furniture,12000.0,1,2024-01-18
+Headphones,Electronics,3500.0,-1,2024-01-19

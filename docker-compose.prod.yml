@@ -1,0 +1,25 @@
+version: "3.9"
+
+# Production overrides — used with:
+# docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+services:
+  api:
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --workers 2
+      --log-level warning
+      --no-access-log
+
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # use env var in prod, not hardcoded
+
+  frontend:
+    environment:
+      - BACKEND_URL=${BACKEND_URL}  # your Render URL

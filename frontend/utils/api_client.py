@@ -158,16 +158,16 @@ class APIClient:
 
         return response.json(), response.status_code
 
-    def explain_chart(self, chart_data: dict) -> tuple[dict, int]:
-        response = httpx.post(
-            f"{self.base_url}/api/v1/visualization/explain",
-            headers=self._headers(),
-            json={
-                "chart_data": chart_data
-            },
-            timeout=60,
-        )
-        return response.json(), response.status_code
+    # def explain_chart(self, chart_data: dict) -> tuple[dict, int]:
+    #     response = httpx.post(
+    #         f"{self.base_url}/api/v1/visualization/explain",
+    #         headers=self._headers(),
+    #         json={
+    #             "chart_data": chart_data
+    #         },
+    #         timeout=60,
+    #     )
+    #     return response.json(), response.status_code
 
     # ── ML methods ─────────────────────────────────────────
 

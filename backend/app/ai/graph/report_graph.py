@@ -149,164 +149,24 @@ def check_ml_node(state: ReportState) -> dict:
     except Exception as e:
         logger.warning(f"[ReportGraph] check_ml failed (non-fatal): {e}")
         return {"ml_results": []}
-
-
-# def generate_charts_node(state: ReportState) -> dict:
-#     """
-#     Node 3: Export top charts from chat history as PNG files.
-#     """
-#     logger.info(f"[ReportGraph] generate_charts")
-#     chart_paths = []
-
-#     try:
-#         from sqlalchemy import create_engine
-#         from sqlalchemy.orm import sessionmaker
-#         from app.modules.chat.models import ChatMessage, ChatSession
-#         import plotly.graph_objects as go
-
-#         engine = create_engine(settings.database_url)
-#         Session = sessionmaker(bind=engine)
-#         db = Session()
-
-#         try:
-#             sessions = db.query(ChatSession).filter(
-#                 ChatSession.user_id == state["user_id"],
-#                 ChatSession.dataset_id == state["dataset_id"],
-#             ).all()
-#             session_ids = [s.id for s in sessions]
-
-#             if session_ids:
-#                 messages_with_charts = db.query(ChatMessage).filter(
-#                     ChatMessage.session_id.in_(session_ids),
-#                     ChatMessage.chart_data.isnot(None),
-#                 ).order_by(ChatMessage.created_at.desc()).limit(5).all()
-
-#                 for i, msg in enumerate(messages_with_charts):
-#                     if not msg.chart_data:
-#                         continue
-#                     try:
-#                         fig = go.Figure(msg.chart_data)
-#                         fig.update_layout(
-#                             width=900, height=500,
-#                             font=dict(family="Arial, sans-serif", size=13),
-#                             template="plotly_white",
-#                         )
-#                         png_path = str(EXPORTS_DIR / f"chart_{state['report_id']}_{i}.png")
-#                         fig.write_image(png_path, scale=2)
-#                         chart_paths.append(png_path)
-#                         logger.info(f"[ReportGraph] Exported chart {i+1}")
-#                     except Exception as e:
-#                         logger.warning(f"[ReportGraph] Chart {i} export failed: {e}")
-#         finally:
-#             db.close()
-
-#         # Also export ML charts if available
-#         for ml_result in state.get("ml_results", []):
-#             if ml_result.get("chart_data"):
-#                 try:
-#                     import plotly.graph_objects as go
-#                     fig = go.Figure(ml_result["chart_data"])
-#                     fig.update_layout(width=900, height=500, template="plotly_white")
-#                     ml_type = ml_result.get("model_type", "ml")
-#                     png_path = str(EXPORTS_DIR / f"ml_{state['report_id']}_{ml_type}.png")
-#                     fig.write_image(png_path, scale=2)
-#                     chart_paths.append(png_path)
-#                 except Exception as e:
-#                     logger.warning(f"[ReportGraph] ML chart export failed: {e}")
-
-#     except Exception as e:
-#         logger.warning(f"[ReportGraph] generate_charts failed (non-fatal): {e}")
-
-#     logger.info(f"[ReportGraph] Exported {len(chart_paths)} charts")
-#     return {"chart_paths": chart_paths}
-
 def generate_charts_node(state: ReportState) -> dict:
     """
-    Node 3: Export ML charts and chat charts as PNG files.
+    Node 3: Collect chart data only.
+    PNG export disabled.
     """
-    logger.info("[ReportGraph] generate_charts")
 
-    chart_paths = []
+    logger.info("[ReportGraph] generate_charts skipped export")
 
-    try:
-        import plotly.graph_objects as go
+    return {
+        "chart_paths": []
+    }
+# def generate_charts_node(state: ReportState):
 
-        # 1. Export ML charts
-        ml_results = state.get("ml_results", [])
+#     logger.info("[ReportGraph] generate_charts skipped")
 
-        logger.info(
-            f"[ReportGraph] Processing ML charts: {len(ml_results)}"
-        )
+#     state["chart_paths"] = []
 
-        for ml_result in ml_results:
-
-            chart_data = ml_result.get("chart_data")
-
-
-            if not chart_data:
-                logger.warning(
-                    f"[ReportGraph] No chart_data for {ml_result.get('model_type')}"
-                )
-                continue
-            if isinstance(chart_data, str):
-                chart_data = json.loads(chart_data)
-
-            try:
-                fig = go.Figure(chart_data)
-
-                fig.update_layout(
-                    width=900,
-                    height=500,
-                    template="plotly_white",
-                )
-
-                ml_type = ml_result.get(
-                    "model_type",
-                    "ml"
-                )
-
-                png_path = str(
-                    EXPORTS_DIR /
-                    f"ml_{state['report_id']}_{ml_type}.png"
-                )
-
-                fig.write_image(
-                png_path,
-                engine="kaleido"
-                )
-                logger.info(f"[ReportGraph] FILE CREATED {png_path}")
-
-                chart_paths.append(png_path)
-
-                logger.info(
-                    f"[ReportGraph] Exported ML chart: {ml_type}"
-                )
-
-            except Exception as e:
-                logger.error(
-                    f"[ReportGraph] ML chart failed {ml_result.get('model_type')}: {e}",
-                    exc_info=True
-                )
-
-
-        logger.info(
-            f"[ReportGraph] Exported {len(chart_paths)} charts"
-        )
-
-        return {
-            "chart_paths": chart_paths
-        }
-
-
-    except Exception as e:
-        logger.error(
-            f"[ReportGraph] generate_charts failed: {e}",
-            exc_info=True
-        )
-
-        return {
-            "chart_paths": []
-        }
+#     return state
 def write_summary_node(state: ReportState) -> dict:
     """
     Node 4: LLM generates executive summary, key insights, and recommendations.

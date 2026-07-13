@@ -62,4 +62,4 @@ jobs:
   #   steps:
   #     - uses: actions/checkout@v4
   #     - name: Build backend image
-  #       run: docker build ./backend -t ai-data-analyst-api:test
+  #       run: docker build ./backend -t insightforge-api:test

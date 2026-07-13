@@ -3,6 +3,7 @@ import logging
 from app.core.config import settings,key_rotator
 from app.core.constants import IntentType
 from app.core.key_manager import get_next_key
+from langchain_groq import ChatGroq
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ async def classify_intent(question: str, columns: list[str]) -> IntentType:
     Cost: ~0.001 cents per call. Speed: ~200ms.
     """
     try:
-        from langchain_groq import ChatGroq
+        
         from langchain_core.messages import HumanMessage
 
         llm = ChatGroq(
