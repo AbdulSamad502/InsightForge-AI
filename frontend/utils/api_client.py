@@ -3,23 +3,19 @@ import streamlit as st
 import os
 
 
-def get_backend_url():
+def _get_backend_url():
 
-    # Production: Streamlit Cloud secrets
     try:
-        if "BACKEND_URL" in st.secrets:
-            return st.secrets["BACKEND_URL"]
+        return st.secrets["BACKEND_URL"]
+
     except Exception:
-        pass
-
-    # Local development
-    return os.getenv(
-        "BACKEND_URL",
-        "http://localhost:8000"
-    )
+        return os.getenv(
+            "BACKEND_URL",
+            "http://localhost:8000"
+        )
 
 
-BACKEND_URL = get_backend_url()
+BACKEND_URL = _get_backend_url()
 
 
 class APIClient:
