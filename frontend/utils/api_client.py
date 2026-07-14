@@ -65,7 +65,12 @@ class APIClient:
             f"{self.base_url}/api/v1/datasets/upload",
             headers=self._headers(),
             files={"file": (filename, file_bytes, "multipart/form-data")},
-            timeout=180,  # uploads can take time
+            timeout=httpx.Timeout(
+                connect=30,
+                read=600,
+                write=600,
+                pool=30
+            )  # uploads can take time
         )
         return response.json(), response.status_code
 
