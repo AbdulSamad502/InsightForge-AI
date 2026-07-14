@@ -23,7 +23,7 @@ backend/app/storage/temp/*
 !backend/app/storage/reports/.gitkeep
 !backend/app/storage/exports/.gitkeep
 !backend/app/storage/temp/.gitkeep
-
+.streamlit/secrets.toml
 # Logs
 backend/logs/*
 !backend/logs/.gitkeep

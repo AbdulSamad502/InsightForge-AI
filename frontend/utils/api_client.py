@@ -2,7 +2,24 @@ import httpx
 import streamlit as st
 import os
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+
+def get_backend_url():
+
+    # Production: Streamlit Cloud secrets
+    try:
+        if "BACKEND_URL" in st.secrets:
+            return st.secrets["BACKEND_URL"]
+    except Exception:
+        pass
+
+    # Local development
+    return os.getenv(
+        "BACKEND_URL",
+        "http://localhost:8000"
+    )
+
+
+BACKEND_URL = get_backend_url()
 
 
 class APIClient:
