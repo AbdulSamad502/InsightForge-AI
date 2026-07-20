@@ -1,218 +1,478 @@
-# 🤖 AI Data Analyst Agent
-### AI-powered Business Intelligence Platform
+# ⚡ InsightForge-AI
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
-[![LangChain](https://img.shields.io/badge/LangChain-0.3.1-1C3C3C?style=flat)](https://langchain.com)
-[![LangGraph](https://img.shields.io/badge/LangGraph-0.2.28-FF6B6B?style=flat)](https://langchain.com/langgraph)
-[![Groq](https://img.shields.io/badge/Groq-llama--3.3--70b-F55036?style=flat)](https://groq.com)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=flat&logo=postgresql)](https://postgresql.org)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker)](https://docker.com)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.39-FF4B4B?style=flat&logo=streamlit)](https://streamlit.io)
-[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat&logo=python)](https://python.org)
+<div align="center">
 
-**🌐 Live Demo:** [your-app.streamlit.app](https://your-app.streamlit.app)
-**📹 Demo Video:** [Watch 3-minute demo](https://youtube.com/your-demo-link)
-**📖 API Docs:** [your-api.onrender.com/docs](https://your-api.onrender.com/docs)
+## AI-Powered Business Intelligence Platform
+
+Transform raw business data into actionable insights using **Generative AI, Machine Learning, and Agentic AI workflows**.
+
+Upload datasets, ask questions in natural language, generate visualizations, predictions, and business reports — without writing SQL or Python.
+
+</div>
 
 ---
 
-## What Is This?
+# 📸 Screenshots
 
-Most businesses have data but can't analyze it. Hiring a data analyst costs $50,000+/year.
-This platform lets any business owner upload their Excel/CSV data, ask questions in plain
-English, and get instant charts, forecasts, anomaly alerts, and professional PDF reports —
-no SQL, no Python, no BI tools required.
+## Dashboard
 
-Think: **ChatGPT + Power BI + Data Analyst**, available 24/7 for any file you upload.
+![Dashboard](backend\docs\screenshorts\dashboard.png)
 
 ---
 
-## Demo
+# 📌 Overview
 
-> **Upload** → **Ask** → **Get Charts + Insights + Forecasts + PDF Report**
+Businesses generate large amounts of data, but extracting meaningful insights often requires technical expertise, dedicated analysts, and time-consuming reporting workflows.
 
-![Dashboard Screenshot](docs/screenshots/dashboard.png)
-![Chat Screenshot](docs/screenshots/chat.png)
-![Report Screenshot](docs/screenshots/report.png)
+**InsightForge-AI bridges this gap by providing an AI-powered data analyst assistant that automates repetitive analytics tasks.**
 
----
+Instead of spending hours cleaning datasets, creating charts, and preparing reports, users can interact with their data using simple natural language questions.
 
-## Features
+Example:
 
-### ✅ V1.0 (Implemented)
+```
+User:
+"Why did sales decrease last month?"
 
-**Data Management**
-- CSV and Excel (.xlsx) upload with automatic profiling
-- Smart data cleaning: missing values, duplicates, negatives, bad dates, inconsistent categories
-- AI-generated smart questions based on your actual column names
+InsightForge AI:
 
-**AI Chat**
-- Natural language → pandas code → chart → business insight → recommendation
-- Intent classifier routes questions to the right tool automatically
-- Conversation memory (last 10 turns per session)
-- 6 chart types: bar, line, pie, heatmap, histogram, scatter
-- "Explain this chart" button for every visualization
-
-**Machine Learning**
-- Sales/Revenue Forecasting (GradientBoosting + bootstrap confidence intervals)
-- Anomaly Detection (IQR + IsolationForest + highlighted visualization)
-- Churn Prediction (RandomForest + feature importance analysis)
-- Background task processing — results polled in real-time
-
-**Reports**
-- LangGraph 5-node pipeline: gather → ML → charts → summary → PDF
-- Professional PDF: cover page, executive summary, data overview, insights, charts, ML results, recommendations
-- One-click generation and download
-
-**Platform**
-- JWT authentication
-- Dashboard with KPI cards and recent activity
-- LangSmith observability — every LLM call traced
-- Docker + Docker Compose deployment
-- CI/CD via GitHub Actions (lint + test + docker build)
-
-### 🗺️ V2 Roadmap
-
-- [ ] React + TypeScript frontend (zero backend changes — architecture is ready)
-- [ ] MySQL/PostgreSQL direct connection with NL-to-SQL
-- [ ] Multi-dataset cross-analysis with auto join detection
-- [ ] Scheduled automated reports via email
-- [ ] Team workspaces with role-based access control
-- [ ] Redis caching for repeated queries
-- [ ] Celery for distributed ML job processing
-- [ ] Customer segmentation (K-Means clustering)
-- [ ] Multi-agent LangGraph architecture for complex queries
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Streamlit (React-ready architecture) |
-| Backend | FastAPI + Pydantic v2 + SQLAlchemy |
-| Database | PostgreSQL + Alembic migrations |
-| AI Agent | LangChain AgentExecutor + Groq (llama-3.3-70b) |
-| Report Pipeline | LangGraph StateGraph (5 nodes) |
-| ML Models | Scikit-learn (GradientBoosting, IsolationForest, RandomForest) |
-| Charts | Plotly |
-| PDF Generation | ReportLab |
-| Observability | LangSmith |
-| Auth | JWT (python-jose + passlib/bcrypt) |
-| Deployment | Docker + Render + Streamlit Cloud |
-| CI/CD | GitHub Actions |
-
----
-
-## Architecture
-Frontend (Streamlit)
-↓ HTTP (all business logic in backend)
-FastAPI Backend (/api/v1/)
-├── Auth Module
-├── Datasets Module (upload, clean, profile)
-├── Chat Module → LangChain AgentExecutor
-│       ↓
-│   Intent Classifier (llama-8b, fast)
-│       ↓
-│   Tools: PandasTool | ChartTool | MLTool | InsightTool
-│       ↓
-│   Groq LLM (llama-3.3-70b)
-├── ML Module (forecast/anomaly/churn) → Background Tasks
-├── Reports Module → LangGraph Pipeline
-│       Nodes: gather_insights → check_ml → generate_charts
-│              → write_summary → compile_pdf
-├── Visualization Module (6 chart builders)
-└── Dashboard Module
-↓
-PostgreSQL (users, datasets, chat, ml_results, reports)
-
-**Key architectural decisions:**
-- All business logic in FastAPI — Streamlit is pure display (swap to React = UI rewrite only)
-- LangChain for chat (tool-calling loop), LangGraph for reports (conditional DAG)
-- Background tasks for ML + reports — returns 202 immediately, frontend polls
-- Feature-based folder structure: each module has router/service/repository/schemas/models
-
----
-
-## Quick Start
-
-```bash
-# 1. Clone and setup
-git clone https://github.com/YOUR_USERNAME/ai-data-analyst.git
-cd ai-data-analyst
-cp backend/.env.example backend/.env
-# Fill in GROQ_API_KEY and LANGCHAIN_API_KEY in backend/.env
-
-# 2. Start everything
-docker-compose up --build
-
-# 3. Run database migrations
-docker-compose exec api alembic upgrade head
-
-# Open http://localhost:8501 in your browser
+✓ Analyzes the dataset
+✓ Finds important patterns
+✓ Generates visualization
+✓ Explains business insights
+✓ Provides recommendations
 ```
 
-**Get your free API keys:**
-- Groq (LLM): https://console.groq.com (free, no credit card)
-- LangSmith (observability): https://smith.langchain.com (free tier)
+---
+## AI Data Analyst Chat
+
+![AI Chat](backend\docs\screenshorts\ai.png)
+
+# 🚀 Business Impact
+
+InsightForge-AI helps organizations:
+
+- Reduce time spent on repetitive data analysis
+- Minimize manual reporting efforts
+- Enable non-technical users to explore business data
+- Accelerate decision-making through AI-powered insights
+
+Professional data analysis often requires dedicated analysts, BI tools, and significant operational investment.
+
+InsightForge-AI helps reduce the workload of repetitive analytical tasks by automating:
+
+- Dataset exploration
+- Data cleaning assistance
+- Visualization generation
+- Business question answering
+- Report creation
+- ML-based predictions
+
+The goal is not to replace analysts, but to **increase productivity and allow teams to focus on strategic decisions.**
 
 ---
 
-## Project Structure
-ai-data-analyst/
+# ✨ Features
+
+## 📂 Smart Data Analysis
+
+- Upload CSV and Excel datasets
+- Automatic dataset profiling
+- Column type detection
+- Missing value analysis
+- Duplicate detection
+- Data cleaning assistance
+- AI-generated analytical questions
+
+
+---
+
+## 🤖 AI Data Analyst Agent
+
+Ask business questions naturally:
+
+```
+"Show monthly revenue trends"
+
+"Find top performing products"
+
+"Predict next quarter sales"
+
+"Detect unusual transactions"
+```
+
+The AI agent:
+
+- Understands user intent
+- Selects appropriate tools
+- Performs analysis
+- Generates insights
+- Provides recommendations
+
+
+---
+
+## 📊 Visualization Engine
+
+Automatically creates:
+
+- Bar charts
+- Line charts
+- Pie charts
+- Heatmaps
+- Histograms
+- Scatter plots
+
+
+Each visualization includes:
+
+- Data explanation
+- Business interpretation
+- Actionable insights
+
+
+---
+
+## 🤖 Machine Learning Capabilities
+
+Integrated ML modules:
+
+### Sales Forecasting
+
+Predict future sales trends for planning and decision-making.
+
+### Anomaly Detection
+
+Identify unusual patterns and potential data issues.
+
+### Customer Churn Prediction
+
+Detect customers with higher churn probability.
+
+
+## Machine Learning Predictions
+
+![ML Prediction](backend\docs\screenshorts\ml.png)
+---
+
+## 📄 AI Report Generation
+
+Generate professional PDF reports containing:
+
+- Executive summary
+- Dataset overview
+- Key insights
+- Visualizations
+- ML results
+- Recommendations
+
+## Generated Business Report
+
+![Report](backend\docs\screenshorts\report.png)
+
+---
+
+# 🧠 AI Architecture
+
+```
+                User Question
+
+                      ↓
+
+              Intent Classifier
+
+                      ↓
+
+              AI Agent (LangChain)
+
+                      ↓
+
+        ------------------------------
+
+        Data Analysis Tool
+
+        Visualization Tool
+
+        Machine Learning Tool
+
+        ------------------------------
+
+                      ↓
+
+        Business Insight + Recommendation
+```
+
+Report generation uses **LangGraph workflow pipelines** for structured AI execution.
+
+---
+
+# 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React + TypeScript + Tailwind CSS |
+| Backend | FastAPI + Python |
+| Database | PostgreSQL + SQLAlchemy |
+| AI Framework | LangChain + LangGraph |
+| Local LLM | Ollama |
+| Machine Learning | Scikit-learn |
+| Visualization | Plotly |
+| Authentication | JWT + bcrypt |
+| Deployment | Docker + Docker Compose |
+| Testing | Pytest |
+
+
+---
+
+# 📁 Project Structure
+
+```text
+InsightForge-AI/
+
 ├── backend/
 │   ├── app/
-│   │   ├── modules/          # Feature-based: auth, datasets, chat, ml, reports
-│   │   ├── ai/               # Agent, tools, LangGraph pipeline, prompts
-│   │   ├── core/             # Config, security, exceptions, middleware
-│   │   └── shared/           # Dependencies, pagination, responses
-│   ├── tests/                # 38 tests: unit + API
-│   ├── docs/                 # PRD, architecture, API reference, deployment
-│   └── alembic/              # Database migrations
-└── frontend/
-├── pages/                # Upload, Chat, Dashboard, Reports
-├── components/           # Reusable UI components
-└── utils/                # API client (maps 1:1 to React fetch calls)
+│   │   ├── modules/
+│   │   ├── ai/
+│   │   ├── core/
+│   │   └── database/
+│   │
+│   └── tests/
+
+├── frontend-react/
+│   ├── src/
+│   ├── components/
+│   └── pages/
+
+├── docs/
+│   └── screenshots/
+
+├── docker-compose.yml
+└── README.md
+```
+
 ---
 
-## Running Tests
+# 🚀 Installation & Setup
+
+## 1. Clone Repository
+
+```bash
+git clone https://github.com/AbdulSamad502/InsightForge-AI.git
+
+cd InsightForge-AI
+```
+
+---
+
+# Backend Setup
 
 ```bash
 cd backend
-venv\Scripts\activate  # Windows
-pytest tests/ -v       # runs 38 tests
+
+python -m venv venv
+```
+
+Activate environment:
+
+Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+Linux/Mac:
+
+```bash
+source venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
 ```
 
 ---
 
-## Deployment
+# 🔑 Environment Configuration
 
-See [docs/deployment.md](backend/docs/deployment.md) for step-by-step instructions.
+Create a `.env` file inside the backend folder:
 
-**Live deployment:**
-- Backend: Render (FastAPI + PostgreSQL, free tier)
-- Frontend: Streamlit Community Cloud (free)
+```
+backend/.env
+```
+
+Add your configuration:
+
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/insightforge
+
+SECRET_KEY=your_secret_key
+
+
+# LLM Provider
+
+LLM_PROVIDER=ollama
+
+
+# Ollama Local Model
+
+OLLAMA_BASE_URL=http://localhost:11434
+
+OLLAMA_MODEL=qwen3:8b
+
+
+# Optional Cloud LLM
+
+GROQ_API_KEY=your_groq_api_key
+
+
+# LangSmith Monitoring (Optional)
+
+LANGCHAIN_TRACING_V2=true
+
+LANGCHAIN_API_KEY=your_langsmith_api_key
+
+LANGCHAIN_PROJECT=insightforge-ai
+```
+
+⚠️ Never upload `.env` files or API keys to GitHub.
 
 ---
 
-## Built With
+# 🤖 Ollama Setup
 
-This project demonstrates production-quality AI engineering:
-- **Sandboxed code execution** — pandas tool blocks dangerous imports
-- **Token optimization** — minimal prompts, key rotation, simple-answer bypass
-- **Observability** — LangSmith traces every LLM call with latency and token usage
-- **Background tasks** — ML and report generation don't block HTTP responses
-- **Repository pattern** — clean separation of business logic from data access
-- **Feature-based architecture** — each module is self-contained and independently testable
+Install Ollama and download the model:
+
+```bash
+ollama pull qwen3:8b
+```
+
+Start Ollama:
+
+```bash
+ollama serve
+```
 
 ---
 
-## Author
+# ▶️ Run Application
 
-**Abdul Samad**
-- Portfolio: [your-portfolio.com]
-- LinkedIn: [linkedin.com/in/your-profile]
-- GitHub: [github.com/your-username]
+## Start Backend
 
-*Built as part of a 7-day AI engineering sprint — demonstrating industrial-level
-architecture, not just prototype-level coding.*
+```bash
+cd backend
+
+uvicorn app.main:app --reload
+```
+
+Backend:
+
+```
+http://localhost:8000
+```
+
+Swagger Documentation:
+
+```
+http://localhost:8000/docs
+```
+
+---
+
+## Start Frontend
+
+```bash
+cd frontend-react
+
+npm install
+
+npm run dev
+```
+
+Frontend:
+
+```
+http://localhost:5173
+```
+
+---
+
+# 🗺️ Roadmap
+
+## V1.0 Beta ✅
+
+Current release includes:
+
+- AI data analysis chatbot
+- Dataset intelligence
+- Visualization generation
+- ML prediction modules
+- Automated PDF reports
+- React dashboard
+- Local LLM support using Ollama
+
+
+## Future Improvements
+
+- Multi-agent AI workflows
+- Real-time dashboards
+- Database connectors
+- Team collaboration
+- Cloud deployment
+- Enterprise features
+
+
+---
+
+# 👨‍💻 Author
+
+## Abdul Samad
+
+AI/ML Engineer focused on:
+
+- Generative AI
+- Large Language Models
+- Agentic AI
+- Machine Learning
+- AI-powered applications
+
+
+GitHub:
+
+https://github.com/AbdulSamad502
+
+
+LinkedIn:
+
+https://linkedin.com/in/abdul-samad-ai
+
+
+---
+
+# 📌 Release Note
+
+## InsightForge-AI v1.0 Beta
+
+This is the first beta release of InsightForge-AI.
+
+The current version demonstrates a complete AI-powered business intelligence workflow including:
+
+- Data analysis
+- Natural language interaction
+- AI agents
+- Machine learning insights
+- Visualization generation
+- Automated reporting
+
+
+As a **v1.0 Beta version**, the platform will continue to receive improvements, optimizations, and additional enterprise-level capabilities in future releases.
+
+---
+
+<div align="center">
+
+Built with ❤️ using  
+**FastAPI · React · LangChain · LangGraph *
+
+</div>

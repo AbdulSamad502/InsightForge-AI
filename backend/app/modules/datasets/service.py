@@ -7,8 +7,6 @@ import pandas as pd
 from pathlib import Path
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
-from app.core.key_manager import get_next_key
-
 from app.core.config import settings
 from app.core.exceptions import InvalidFileError, FileTooLargeError, DatasetNotFoundError
 from app.modules.datasets import repository
@@ -24,6 +22,7 @@ from app.modules.datasets.cleaner import (
     compute_statistics,
 )
 from app.ai.observability import log_llm_usage
+from app.ai.llm_factory import get_fast_llm
 
 logger = logging.getLogger(__name__)
 
@@ -71,11 +70,12 @@ def _read_file(file_path: Path, file_type: str) -> pd.DataFrame:
 
 async def _generate_suggestions(df: pd.DataFrame) -> list[str]:
     """
-    Call Groq LLM with suggestion.md prompt to generate 5 smart questions.
+   Call Ollama LLM with suggestion.md prompt to generate 5 smart questions.
     Returns list of question strings.
     Falls back to default questions if LLM fails.
     """
-    from langchain_groq import ChatGroq
+    from app.ai.llm_factory import get_fast_llm
+    from app.ai.llm_factory import get_fast_llm
     from langchain_core.messages import HumanMessage
     from app.core.config import settings
 
@@ -104,11 +104,7 @@ async def _generate_suggestions(df: pd.DataFrame) -> list[str]:
 
     start = time.perf_counter()
     try:
-        llm = ChatGroq(
-            model=settings.groq_fast_model,  # use cheap fast model for this
-            api_key=get_next_key(),
-            temperature=0.3,
-        )
+        llm = get_fast_llm()
         response = llm.invoke([HumanMessage(content=prompt)])
         latency = round((time.perf_counter() - start) * 1000, 2)
 
@@ -121,7 +117,7 @@ async def _generate_suggestions(df: pd.DataFrame) -> list[str]:
                 raw = raw[4:]
         questions = json.loads(raw.strip())
         if isinstance(questions, list) and len(questions) > 0:
-            log_llm_usage("generate_suggestions", settings.groq_fast_model, latency_ms=latency)
+            log_llm_usage("generate_suggestions", settings.ollama_fast_model, latency_ms=latency)
             return questions[:5]
     except Exception as e:
         logger.warning(f"LLM suggestion generation failed: {e}. Using defaults.")

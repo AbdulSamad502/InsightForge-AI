@@ -1,5 +1,7 @@
+print("SERVICE FILE LOADED")
 import json
 import logging
+import traceback
 import pandas as pd
 from pathlib import Path
 from sqlalchemy.orm import Session
@@ -77,8 +79,6 @@ async def create_session(
         title=data.title,
     )
     return ChatSessionResponse.model_validate(session)
-
-
 async def send_message(
     session_id: str,
     data: SendMessageRequest,
@@ -107,11 +107,7 @@ async def send_message(
                 # Load DataFrame
         df = _load_dataframe(session.dataset_id, user_id, db)
         columns = list(df.columns)
-                # -------- SIMPLE QUESTION CHECK --------
-        simple_answer = await _try_simple_answer(
-            data.message,
-            df
-        )
+        simple_answer = await _try_simple_answer(data.message, df)
 
         if simple_answer:
             assistant_msg = repository.save_message(
@@ -125,12 +121,17 @@ async def send_message(
                 message=ChatMessageResponse.model_validate(assistant_msg),
                 session_id=session_id,
             )
+                # -------- SIMPLE QUESTION CHECK --------
+        
 
+       
         # ---------------- CACHE CHECK ----------------
         cache_key = get_cache_key(
-            data.message,
-            session.dataset_id
+        data.message,
+        session.dataset_id
         )
+
+        intent = None
 
 
         if cache_key in _cache:
@@ -185,17 +186,20 @@ async def send_message(
         )
 
         logger.info(
-            f"Message processed: session={session_id} "
-            f"intent={intent.value} has_chart={chart_data_dict is not None}"
-        )
-
+        f"Message processed: session={session_id} "
+        f"intent={intent.value if intent else agent_result.get('intent')} "
+        f"has_chart={chart_data_dict is not None}"
+    )
         return AgentResponse(
             message=ChatMessageResponse.model_validate(assistant_msg),
             session_id=session_id,
         )
 
+    
+
     except Exception as e:
-        logger.error(f"Message processing failed: {e}", exc_info=True)
+        traceback.print_exc()
+        logger.error("FULL ERROR", exc_info=True)
         # Save error message so conversation history is complete
         error_msg = repository.save_message(
             db=db,
@@ -226,5 +230,4 @@ def get_session_with_messages(
 
 def get_cache_key(question: str, dataset_id: str) -> str:
     return hashlib.md5(f"{question}{dataset_id}".encode()).hexdigest()
-
 

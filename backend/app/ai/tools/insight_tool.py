@@ -3,12 +3,12 @@ import time
 import logging
 from pathlib import Path
 from langchain.tools import BaseTool
-from langchain_groq import ChatGroq
+from app.ai.llm_factory import get_main_llm
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
-from app.core.config import settings,key_rotator
+from app.core.config import settings
 from app.ai.observability import log_llm_usage
-from app.core.key_manager import get_next_key
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,12 +44,7 @@ class InsightTool(BaseTool):
             insight_prompt_template = _load_prompt("insight.md")
             rec_prompt_template = _load_prompt("recommendation.md")
 
-            llm = ChatGroq(
-                model=settings.groq_main_model,
-                api_key=get_next_key(),
-                temperature=0.4,
-                max_tokens=300,
-            )
+            llm = get_main_llm()
 
             # Step 1: Generate insight
             insight_prompt = insight_prompt_template.format(
@@ -67,7 +62,7 @@ class InsightTool(BaseTool):
             rec_text = rec_response.content.strip()
 
             latency = round((time.perf_counter() - start) * 1000, 2)
-            log_llm_usage("generate_insight", settings.groq_main_model, latency_ms=latency)
+            log_llm_usage("generate_insight", settings.ollama_main_model, latency_ms=latency)
 
             return f"INSIGHT: {insight_text}\n\nRECOMMENDATION: {rec_text}"
 

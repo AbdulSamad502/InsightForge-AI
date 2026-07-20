@@ -6,12 +6,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from langgraph.graph import StateGraph, END
-from langchain_groq import ChatGroq
+
 from langchain_core.messages import HumanMessage
 
 from app.ai.graph.state import ReportState
 from app.core.config import settings
-from app.core.key_manager import get_next_key
+from app.ai.llm_factory import get_fast_llm
 
 logger = logging.getLogger(__name__)
 
@@ -224,12 +224,7 @@ def write_summary_node(state: ReportState) -> dict:
             ml_summary=ml_summary[:500],
         )
 
-        llm = ChatGroq(
-            model=settings.groq_fast_model,
-            api_key=get_next_key(),
-            temperature=0.4,
-            max_tokens=500,
-        )
+        llm = get_fast_llm()
         response = llm.invoke([HumanMessage(content=prompt)])
         summary_text = response.content.strip()
 
@@ -547,7 +542,7 @@ def compile_pdf_node(state: ReportState) -> dict:
                 fontSize=12, textColor=colors.HexColor("#666666"), alignment=TA_CENTER)
         ))
         story.append(Paragraph(
-            "Powered by LangChain · Groq · FastAPI",
+            "Powered by LangChain · Ollama · FastAPI",
             ParagraphStyle("Footer2", parent=styles["Normal"],
                 fontSize=10, textColor=colors.HexColor("#999999"), alignment=TA_CENTER)
         ))

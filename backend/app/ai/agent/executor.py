@@ -1,10 +1,9 @@
 import logging
 import pandas as pd
 from pathlib import Path
-from langchain_groq import ChatGroq
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from app.core.config import settings,key_rotator
+from app.core.config import settings
 from app.ai.tools.registry import ToolRegistry
 from app.ai.tools.pandas_tool import pandas_tool
 from app.ai.tools.chart_tool import chart_tool
@@ -13,7 +12,8 @@ from app.ai.tools.insight_tool import insight_tool
 from app.ai.agent.memory import get_memory
 from app.ai.agent.tool_chain import build_chained_tools
 from app.core.constants import IntentType
-from app.core.key_manager import get_next_key
+from app.ai.llm_factory import get_main_llm
+
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ def _build_df_schema(df: pd.DataFrame) -> str:
 def _build_intent_hint(intent: IntentType) -> str:
     """Add intent context to help the agent choose the right tool first."""
     hints = {
-        IntentType.ANALYTICS: "The user wants data analysis. Start with pandas_analysis.",
+        IntentType.ANALYTICS: "Use pandas_analysis whenever analysis is required.",
         IntentType.VISUALIZATION: "The user wants a chart. Use pandas_analysis first, then generate_chart.",
         IntentType.FORECAST: "The user wants forecasting. Use run_ml_model with model_type='forecast'.",
         IntentType.ANOMALY: "The user wants anomaly detection. Use run_ml_model with model_type='anomaly'.",
@@ -163,13 +163,9 @@ async def run_agent(
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
 
-    # Build LLM
-    llm = ChatGroq(
-        model=settings.groq_main_model,
-        api_key=get_next_key(),
-        temperature=0.1,
-        max_tokens=500,
-    )
+    
+
+    llm = get_main_llm()
 
     # Build agent — wrap tools so pandas output chains into generate_insight
     df_columns = ", ".join(df.columns)
@@ -182,14 +178,14 @@ async def run_agent(
 
     # Build executor
     executor = AgentExecutor(
-        agent=agent,
-        tools=tools,
-        verbose=True,  # logs each step to console — great for debugging
-        max_iterations=6,  # prevent infinite loops
-        handle_parsing_errors=True,
-        return_intermediate_steps=True,
+    agent=agent,
+    tools=tools,
+    verbose=True,
+    max_iterations=4,        # was 6 — fewer loops = faster
+    max_execution_time=90,   # hard 90 second cutoff
+    handle_parsing_errors=True,
+    return_intermediate_steps=True,
     )
-
     # Get session memory
     memory = get_memory(session_id)
     chat_history = memory.chat_memory.messages if memory.chat_memory.messages else []
@@ -241,17 +237,17 @@ async def run_agent(
             "chart_json": chart_json,
             "insight": insight_text,
             "recommendation": recommendation_text,
-            "intent": intent.value,
+            "intent": intent.value if intent else "general",
             "code_used": code_used,
         }
 
     except Exception as e:
-        logger.error(f"Agent execution failed: {e}", exc_info=True)
+        logger.error(f"Agent failed: {e}", exc_info=True)
         return {
-            "text": f"I encountered an error analyzing your data: {str(e)}. Please try rephrasing your question.",
+            "text": f"Error: {str(e)[:200]}. Please rephrase your question.",
             "chart_json": None,
             "insight": None,
             "recommendation": None,
-            "intent": intent.value,
+            "intent": intent.value if intent else "general",
             "code_used": None,
         }

@@ -1,9 +1,8 @@
 import json
 import logging
-from app.core.config import settings,key_rotator
+from app.core.config import settings
 from app.core.constants import IntentType
-from app.core.key_manager import get_next_key
-from langchain_groq import ChatGroq
+from app.ai.llm_factory import get_fast_llm
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +35,7 @@ async def classify_intent(question: str, columns: list[str]) -> IntentType:
         
         from langchain_core.messages import HumanMessage
 
-        llm = ChatGroq(
-            model=settings.groq_fast_model,  # llama-3.1-8b-instant — fast and cheap
-            api_key=get_next_key(),
-            temperature=0,  # deterministic classification
-            max_tokens=10,  # we only need {"intent": "analytics"}
-        )
+        llm = get_fast_llm()
 
         prompt = INTENT_PROMPT.format(
             columns=", ".join(columns[:20]),  # limit columns to avoid token waste
@@ -49,7 +43,14 @@ async def classify_intent(question: str, columns: list[str]) -> IntentType:
         )
 
         response = llm.invoke([HumanMessage(content=prompt)])
-        raw = response.content.strip()
+        print("=" * 80)
+        print("FULL RESPONSE OBJECT")
+        print(response)
+        print("TYPE:", type(response))
+        print("CONTENT:", repr(response.content))
+        print("=" * 80)
+
+        raw = (response.content or "").strip()
 
         # Parse JSON response
         if raw.startswith("```"):

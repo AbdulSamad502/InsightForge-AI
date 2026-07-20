@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: #07070f;
+  color: #f1f5f9;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0d0d1a; }
+::-webkit-scrollbar-thumb { background: #1e1e35; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+
+/* Selection */
+::selection { background: rgba(99,102,241,0.3); color: #f1f5f9; }
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass card */
+.glass {
+  background: rgba(18, 18, 31, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+/* Animated border gradient */
+.border-gradient {
+  border: 1px solid transparent;
+  background: linear-gradient(#12121f, #12121f) padding-box,
+              linear-gradient(135deg, #6366f1, #8b5cf6) border-box;
+}
+
+/* Shimmer loading */
+.shimmer {
+  background: linear-gradient(90deg, #12121f 25%, #1e1e35 50%, #12121f 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Chat bubble styles */
+.chat-user {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border-radius: 18px 18px 4px 18px;
+}
+.chat-ai {
+  background: #12121f;
+  border: 1px solid #1e1e35;
+  border-radius: 18px 18px 18px 4px;
+}
+
+/* Insight / recommendation boxes */
+.insight-box {
+  background: rgba(16, 185, 129, 0.05);
+  border-left: 3px solid #10b981;
+  border-radius: 0 8px 8px 0;
+}
+.recommendation-box {
+  background: rgba(245, 158, 11, 0.05);
+  border-left: 3px solid #f59e0b;
+  border-radius: 0 8px 8px 0;
+}
+
+/* Plotly chart dark override */
+.js-plotly-plot .plotly { background: transparent !important; }
+
+/* Input focus glow */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.4);
+}
+
+/* Page transition */
+.page-enter { animation: fadeIn 0.25s ease-in-out; }

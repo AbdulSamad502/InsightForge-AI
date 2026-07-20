@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.core.handlers import register_exception_handlers
 from app.core.middleware import RequestIDMiddleware, TimingMiddleware
 
+
 # ── Logging setup ──────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
@@ -27,11 +28,8 @@ app = FastAPI(
 # ── Middleware (order matters — first added = outermost) ───
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["http://localhost:8501", "https://*.streamlit.app"],
-    allow_origins=[
-    "http://localhost:8501",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -57,3 +55,5 @@ logger.info(f"AI Data Analyst API started in {settings.environment} mode.")
 async def startup_event():
     setup_langsmith()
     logger.info("AI Data Analyst API is ready.")
+
+

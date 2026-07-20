@@ -21,45 +21,71 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # ── Ollama Local LLM ──────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ai_analyst_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    restart: unless-stopped
+
   # ── FastAPI Backend ───────────────────────────────────────
   api:
+    command: >
+      bash -c "bash scripts/pull_model.sh &&
+               alembic upgrade head &&
+               uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: ai_analyst_api
     ports:
       - "8000:8000"
+
     env_file:
       - ./backend/.env
+
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+
     volumes:
       # Persist user uploads and generated reports
       - ./backend/app/storage:/app/app/storage
       - ./backend/logs:/app/logs
+
     depends_on:
       db:
         condition: service_healthy
+      ollama:
+        condition: service_started
+
     restart: unless-stopped
+
     healthcheck:
       test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # ── Streamlit Frontend ────────────────────────────────────
+  # ── React Frontend ────────────────────────────────────────
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend-react
       dockerfile: Dockerfile
     container_name: ai_analyst_frontend
     ports:
-      - "8501:8501"
-    env_file:
-      - ./frontend/.env
+      - "3000:3000"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:8000
     depends_on:
-      api:
-        condition: service_healthy
+      - api
     restart: unless-stopped
 
 volumes:
   postgres_data:
     name: ai_analyst_postgres_data
+
+  ollama_models:
+    name: ai_analyst_ollama_models

@@ -5,7 +5,7 @@ from app.core.config import settings
 from app.core.constants import IntentType
 from app.modules.visualization.builders import line, bar, pie, heatmap, histogram, scatter
 from app.modules.visualization.schemas import ChartResponse, ExplainChartResponse
-from app.core.key_manager import get_next_key
+from app.ai.llm_factory import get_fast_llm
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +121,7 @@ async def explain_chart(
     Powers the 'Explain this chart' button.
     """
     import time
-    from langchain_groq import ChatGroq
+    from app.ai.llm_factory import get_fast_llm
     from langchain_core.messages import HumanMessage
     from app.ai.observability import log_llm_usage
 
@@ -140,16 +140,11 @@ Write exactly 2 sentences:
 Be specific with numbers. Use plain language. No jargon."""
 
     try:
-        llm = ChatGroq(
-            model=settings.groq_fast_model,
-            api_key=get_next_key(),
-            temperature=0.3,
-            max_tokens=150,
-        )
+        llm = get_fast_llm()
         start = time.perf_counter()
         response = llm.invoke([HumanMessage(content=prompt)])
         latency = round((time.perf_counter() - start) * 1000, 2)
-        log_llm_usage("explain_chart", settings.groq_fast_model, latency_ms=latency)
+        log_llm_usage("explain_chart", settings.ollama_fast_model, latency_ms=latency)
 
         return ExplainChartResponse(explanation=response.content.strip())
 

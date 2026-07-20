@@ -13,7 +13,18 @@ env/
 *.egg-info/
 dist/
 build/
+# Frontend
+node_modules/
+frontend-react2/node_modules/
 
+# Backend
+venv/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+*.env
 # Storage (user data, not code)
 backend/app/storage/uploads/*
 backend/app/storage/reports/*

@@ -1,4 +1,3 @@
-import itertools
 from functools import lru_cache
 from pydantic_settings import BaseSettings
 
@@ -13,11 +12,15 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440
+    # LLM Provider Selection
+    llm_provider: str = "ollama"        
 
-    # Groq
-    groq_api_key: str
-    groq_api_keys: str = ""
-    groq_main_model: str = "llama-3.1-8b-instant"
+    # # Ollama settings (used when llm_provider=ollama)
+    # ollama_base_url: str = "http://localhost:11434"
+    # ollama_main_model: str = "gemma3:4b"
+    # ollama_fast_model: str = "gemma3:4b"
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.3-70b-versatile"
     groq_fast_model: str = "llama-3.1-8b-instant"
 
     # LangSmith
@@ -51,15 +54,7 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     return Settings()
 
-class KeyRotator:
-    def __init__(self, keys: str):
-        key_list = [k.strip() for k in keys.split(",")]
-        self._cycle = itertools.cycle(key_list)
-    
-    def next(self) -> str:
-        return next(self._cycle)
 
 
 
 settings = get_settings()
-key_rotator = KeyRotator(settings.groq_api_keys)
