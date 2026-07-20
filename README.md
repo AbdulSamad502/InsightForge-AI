@@ -16,7 +16,9 @@ Upload datasets, ask questions in natural language, generate visualizations, pre
 
 ## Dashboard
 
-![Dashboard](backend\docs\screenshorts\dashboard.png)
+<img width="1912" height="915" alt="image" src="https://github.com/user-attachments/assets/e2fd99ec-6eb2-46be-9866-2d90d6d9833a" />
+
+
 
 ---
 
@@ -46,7 +48,8 @@ InsightForge AI:
 ---
 ## AI Data Analyst Chat
 
-![AI Chat](backend\docs\screenshorts\ai.png)
+<img width="1896" height="867" alt="image" src="https://github.com/user-attachments/assets/7227f825-9b32-4041-91ea-60a0dfbe0b9d" />
+
 
 # 🚀 Business Impact
 
@@ -152,7 +155,8 @@ Detect customers with higher churn probability.
 
 ## Machine Learning Predictions
 
-![ML Prediction](backend\docs\screenshorts\ml.png)
+<img width="1896" height="926" alt="image" src="https://github.com/user-attachments/assets/97902865-ad90-42b4-8334-37e71c21f796" />
+
 ---
 
 ## 📄 AI Report Generation
@@ -168,7 +172,8 @@ Generate professional PDF reports containing:
 
 ## Generated Business Report
 
-![Report](backend\docs\screenshorts\report.png)
+<img width="1917" height="891" alt="image" src="https://github.com/user-attachments/assets/33a58d9d-a647-47e3-b737-69937649ec27" />
+
 
 ---
 
